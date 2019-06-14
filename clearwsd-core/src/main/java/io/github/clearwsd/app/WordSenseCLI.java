@@ -53,6 +53,7 @@ import io.github.clearwsd.corpus.CoNllDepTreeReader;
 import io.github.clearwsd.corpus.CorpusReader;
 import io.github.clearwsd.corpus.LemmaMappingCorpusReader;
 import io.github.clearwsd.corpus.TextCorpusReader;
+import io.github.clearwsd.corpus.AnchoredTextCorpusReader;
 import io.github.clearwsd.corpus.semeval.ParsingSemevalReader;
 import io.github.clearwsd.corpus.semeval.SemevalReader;
 import io.github.clearwsd.corpus.semlink.ParsingSemlinkReader;
@@ -207,6 +208,9 @@ public abstract class WordSenseCLI {
     @Parameter(names = {"--help", "--usage"}, description = "Display usage", help = true)
     private Boolean help = false;
 
+    @Parameter(names = {"--anchor"}, description = "Include character offsets of tokens in output. This IMPLIES --reparse. Use this only with stanford tokenizer! Nlp4j is not supported yet. ")
+    private Boolean anchor = false;
+
     @Parameter(names = {"-corpus"}, description = "Training/evaluation corpus type")
     private CorpusType corpusType = CorpusType.Semlink;
     @Parameter(names = "-keyExt", description = "Extension for sense key file (only needed for Semeval XML corpora)")
@@ -301,7 +305,7 @@ public abstract class WordSenseCLI {
         if (path == null) {
             return null;
         }
-        if (!reparse) {
+        if (!anchor && !reparse) {
             File depFile = new File(path + parseSuffix);
             if (depFile.exists()) {
                 return depFile.getAbsolutePath();
@@ -420,8 +424,13 @@ public abstract class WordSenseCLI {
             log.warn("No output path provided, saving predictions to {}", outputPath);
         }
         WordSenseAnnotator annotator = getAnnotator();
-        List<DepTree> instances = getParseTrees(inputPath,
-                parsed(inputPath) ? new CoNllDepTreeReader() : new TextCorpusReader(getParser()));
+        List<DepTree> instances;
+        if (!anchor) {
+            instances = getParseTrees(inputPath,
+                    parsed(inputPath) ? new CoNllDepTreeReader() : new TextCorpusReader(getParser()));
+        } else {
+            instances = getParseTrees(inputPath, new AnchoredTextCorpusReader(getParser()));
+        }
         log.info("Applying word sense annotator at {} to {} instances", modelPath, instances.size());
         instances.parallelStream().forEach(annotator::annotate);
         try (FileOutputStream fos = new FileOutputStream(outputPath)) {
