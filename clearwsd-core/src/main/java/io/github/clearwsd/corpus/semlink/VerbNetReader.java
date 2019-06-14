@@ -28,10 +28,7 @@ import java.util.stream.Collectors;
 
 import io.github.clearwsd.corpus.CoNllDepTreeReader;
 import io.github.clearwsd.corpus.CorpusReader;
-import io.github.clearwsd.type.DefaultNlpFocus;
-import io.github.clearwsd.type.DepNode;
-import io.github.clearwsd.type.DepTree;
-import io.github.clearwsd.type.NlpFocus;
+import io.github.clearwsd.type.*;
 import io.github.clearwsd.utils.SenseInventory;
 import lombok.Getter;
 import lombok.Setter;
@@ -104,7 +101,11 @@ public class VerbNetReader implements CorpusReader<NlpFocus<DepNode, DepTree>> {
                         .label(Optional.<String>ofNullable(instance.focus().feature(Gold))
                             .orElse(instance.focus().feature(Sense)))
                         .sentence(instance.sequence().index())
+                        .sentenceStart(instance.sequence() instanceof AnchoredDepTree ? ((AnchoredDepTree) instance.sequence()).getStart() : -1)
+                        .sentenceEnd(instance.sequence() instanceof AnchoredDepTree ? ((AnchoredDepTree) instance.sequence()).getEnd() : -1)
                         .token(instance.focus().index())
+                        .tokenStart(instance.focus() instanceof AnchoredDepNode ? ((AnchoredDepNode) instance.focus()).getStart() : -1)
+                        .tokenEnd(instance.focus() instanceof AnchoredDepNode ? ((AnchoredDepNode) instance.focus()).getEnd() : -1)
                         .lemma(instance.focus().feature(Predicate))
                         .originalText(Optional.<String>ofNullable(instance.sequence().feature(Text)).orElse(
                             currentTree.tokens().stream().map(t -> (String) t.feature(Text))
@@ -141,10 +142,18 @@ public class VerbNetReader implements CorpusReader<NlpFocus<DepNode, DepTree>> {
 
         private String path;
         private int sentence;
+        private int sentenceStart = -1;
+        private int sentenceEnd = -1;
         private int token;
+        private int tokenStart = -1;
+        private int tokenEnd = -1;
         private String lemma;
         private String label;
         private String originalText;
+
+        public boolean isAnchored() {
+            return tokenStart > 0 && tokenEnd > 0 && sentenceStart > 0 && sentenceEnd > 0;
+        }
     }
 
     public static class VerbNetInstanceParser {
@@ -162,7 +171,9 @@ public class VerbNetReader implements CorpusReader<NlpFocus<DepNode, DepTree>> {
         }
 
         public static String toString(VerbNetInstance instance) {
-            return String.format("%s %d %d %s %s\t%s", instance.path, instance.sentence, instance.token,
+            String sentenceString = instance.isAnchored() ? String.format("%d[%d,%d]", instance.sentence, instance.sentenceStart, instance.sentenceEnd) : Integer.toString(instance.sentence);
+            String tokenString = instance.isAnchored() ? String.format("%d[%d,%d]", instance.token, instance.tokenStart, instance.tokenEnd) : Integer.toString(instance.token);
+            return String.format("%s %s %s %s %s\t%s", instance.path, sentenceString, tokenString,
                 instance.lemma, instance.label, instance.originalText);
         }
     }

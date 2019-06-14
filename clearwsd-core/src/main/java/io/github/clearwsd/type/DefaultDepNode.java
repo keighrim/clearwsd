@@ -36,11 +36,11 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public class DefaultDepNode implements DepNode {
 
-    private DepNode head;
+    protected DepNode head;
     @Setter
-    private NlpInstance nlpToken;
+    protected NlpInstance nlpToken;
     @Setter
-    private List<DepNode> children;
+    protected List<DepNode> children;
 
     public DefaultDepNode(int index) {
         this.nlpToken = new DefaultNlpInstance(index);

@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TextCorpusReader implements CorpusReader<DepTree> {
 
-    private NlpParser parser;
+    protected NlpParser parser;
 
     public TextCorpusReader(NlpParser parser) {
         this.parser = parser;
