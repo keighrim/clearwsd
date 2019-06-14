@@ -40,12 +40,13 @@ public class StanfordTokenizer implements NlpTokenizer {
     private TokenizerFactory tokenizer;
 
     public StanfordTokenizer() {
-        tokenizer = PTBTokenizer.coreLabelFactory();
+        tokenizer = PTBTokenizer.coreLabelFactory("invertible");
     }
 
     @Override
     public List<String> segment(String input) {
         DocumentPreprocessor preprocessor = new DocumentPreprocessor(new StringReader(input));
+        preprocessor.setTokenizerFactory(tokenizer);
         List<String> results = new ArrayList<>();
         for (List<HasWord> sentence : preprocessor) {
             results.add(SentenceUtils.listToOriginalTextString(sentence));
