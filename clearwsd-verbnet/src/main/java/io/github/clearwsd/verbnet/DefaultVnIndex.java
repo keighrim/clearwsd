@@ -23,12 +23,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import io.github.clearwsd.verbnet.xml.VerbNetXmlFactory;
 import lombok.Getter;
@@ -51,8 +46,13 @@ public class DefaultVnIndex implements VnIndex {
      * @return base lemma
      */
     public static String getBaseForm(@NonNull String phrasalVerb) {
-        String[] fields = phrasalVerb.replaceAll("\\s+", "_").split("_");
-        return fields[0].toLowerCase();
+        if (phrasalVerb.replace("_", "").length() == 0) {
+            // in rare cases where the parser thought "_" as a predicate.
+            return phrasalVerb;
+        } else {
+            String[] fields = phrasalVerb.replaceAll("\\s+", "_").split("_");
+            return fields[0].toLowerCase();
+        }
     }
 
     /**
